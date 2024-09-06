@@ -1,70 +1,62 @@
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.preprocessing import image
 from PIL import Image
 import io
-from flask_cors import CORS
 
+# Initialize FastAPI app
+app = FastAPI()
 
-
-app = Flask(__name__)
-CORS(app)
-
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Load the trained discriminator model when the app starts
-discriminator = tf.keras.models.load_model('D:/Projects/CDP-BACKEND/Model/gan_discriminator_model.h5')
+discriminator = tf.keras.models.load_model('Model/gan_discriminator_model.h5')
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    if 'image' not in request.files:
-        return jsonify({'error': 'No image file provided'}), 400
-    if 'label' not in request.form:
-        return jsonify({'error': 'No label provided'}), 400
-
-    # Get the image and label from the request
-    img_file = request.files['image']
-    label = request.form['label']
-
-    # Convert label to integer
+# Define the /predict endpoint
+@app.post("/predict/")
+async def predict(image: UploadFile = File(...)):
+    # Ensure the uploaded file is an image
     try:
-        label = int(label)
-    except ValueError:
-        return jsonify({'error': 'Label must be an integer (0 or 1)'}), 400
-
-    # Read the image in bytes and open it with PIL
-    try:
-        img_bytes = img_file.read()
+        img_bytes = await image.read()
         img = Image.open(io.BytesIO(img_bytes)).convert('L')  # Convert to grayscale
-    except Exception as e:
-        return jsonify({'error': 'Invalid image file'}), 400
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid image file")
 
-    # Resize the image to match the input shape expected by the model
+    # Resize the image to (28, 28)
     img = img.resize((28, 28))
 
-    # Convert the image to array
-    img_array = image.img_to_array(img)
+    # Convert image to numpy array using np.array
+    img_array = np.array(img)
 
     # Normalize the image
     img_array = (img_array - 127.5) / 127.5  # Normalize to [-1, 1]
 
     # Add batch dimension
     img_array = np.expand_dims(img_array, axis=0)  # Shape: (1, 28, 28, 1)
+    img_array = np.expand_dims(img_array, axis=-1)  # Ensure correct channel dimension
 
+    label = 1
     # Prepare the label
     label_array = np.array([label]).reshape(-1, 1)  # Shape: (1, 1)
 
-    # Make prediction
+    # Make prediction using the discriminator model
     prediction = discriminator([img_array, label_array], training=False)
 
     # Interpret the prediction
-    if prediction > 0:
-        result = 'REAL'
-    else:
-        result = 'FAKE'
+    result = "REAL" if prediction > 0 else "FAKE"
 
-    # Return the result
-    return jsonify({'prediction': result})
+    # Return the prediction result
+    return {"prediction": result}
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# If running locally, start Uvicorn server
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000, debug=True)

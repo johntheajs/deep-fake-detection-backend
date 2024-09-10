@@ -53,7 +53,7 @@ async def predict(image_url: ImageUrl):
     return {"prediction": result}
 
 
-# If running locally, start Uvicorn server
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000, debug=True)
+# # If running locally, start Uvicorn server
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run(app, host="127.0.0.1", port=8000, debug=True)

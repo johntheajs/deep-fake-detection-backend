@@ -6,6 +6,8 @@ import numpy as np
 from PIL import Image
 import tensorflow as tf
 import io
+from fastapi.responses import JSONResponse
+
 
 app = FastAPI()
 
@@ -28,6 +30,16 @@ discriminator = tf.keras.models.load_model('Model/gan_discriminator_model.h5')
 class ImageUrl(BaseModel):
     imageUrl: str
 
+# Explicit OPTIONS method handler for preflight requests
+@app.options("/predict/")
+async def options_route():
+    return JSONResponse(status_code=200, headers={
+        "Access-Control-Allow-Origin": "*",  # Replace '*' with allowed origins in production
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "*"
+    })
+
+# Prediction route
 @app.post("/predict/")
 async def predict(image_url: ImageUrl):
     try:
@@ -55,7 +67,6 @@ async def predict(image_url: ImageUrl):
     # Interpret the prediction
     result = "REAL" if prediction > 0 else "FAKE"
     return {"prediction": result}
-
 
 # # If running locally, start Uvicorn server
 # if __name__ == "__main__":

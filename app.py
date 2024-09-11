@@ -17,7 +17,8 @@ app.add_middleware(
     allow_origins=[
         "https://deep-fake-detection-frontend-johntheajs-projects.vercel.app",
         "https://deep-fake-detection-frontend-git-main-johntheajs-projects.vercel.app",
-        "https://deep-fake-detection-backend.onrender.com"
+        "https://deep-fake-detection-backend.onrender.com",
+        "https://deep-fake-detection-backend.onrender.com/predict/"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -34,7 +35,12 @@ class ImageUrl(BaseModel):
 @app.options("/predict/")
 async def options_route():
     return JSONResponse(status_code=200, headers={
-        "Access-Control-Allow-Origin": "*",  # Replace '*' with allowed origins in production
+        "Access-Control-Allow-Origin": [
+        "https://deep-fake-detection-frontend-johntheajs-projects.vercel.app",
+        "https://deep-fake-detection-frontend-git-main-johntheajs-projects.vercel.app",
+        "https://deep-fake-detection-backend.onrender.com",
+        "https://deep-fake-detection-backend.onrender.com/predict/"
+    ],  # Replace '*' with allowed origins in production
         "Access-Control-Allow-Methods": "POST, OPTIONS",
         "Access-Control-Allow-Headers": "*"
     })

@@ -15,10 +15,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://deep-fake-detection-frontend-johntheajs-projects.vercel.app",
-        "https://deep-fake-detection-frontend-git-main-johntheajs-projects.vercel.app",
-        "https://deep-fake-detection-backend.onrender.com",
-        "https://deep-fake-detection-backend.onrender.com/predict/"
+        "*"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -31,19 +28,19 @@ discriminator = tf.keras.models.load_model('Model/gan_discriminator_model.h5')
 class ImageUrl(BaseModel):
     imageUrl: str
 
-# Explicit OPTIONS method handler for preflight requests
-@app.options("/predict/")
-async def options_route():
-    return JSONResponse(status_code=200, headers={
-        "Access-Control-Allow-Origin": [
-        "https://deep-fake-detection-frontend-johntheajs-projects.vercel.app",
-        "https://deep-fake-detection-frontend-git-main-johntheajs-projects.vercel.app",
-        "https://deep-fake-detection-backend.onrender.com",
-        "https://deep-fake-detection-backend.onrender.com/predict/"
-    ],  # Replace '*' with allowed origins in production
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "*"
-    })
+# # Explicit OPTIONS method handler for preflight requests
+# @app.options("/predict/")
+# async def options_route():
+#     return JSONResponse(status_code=200, headers={
+#         "Access-Control-Allow-Origin": [
+#         "https://deep-fake-detection-frontend-johntheajs-projects.vercel.app",
+#         "https://deep-fake-detection-frontend-git-main-johntheajs-projects.vercel.app",
+#         "https://deep-fake-detection-backend.onrender.com",
+#         "https://deep-fake-detection-backend.onrender.com/predict/"
+#     ],  # Replace '*' with allowed origins in production
+#         "Access-Control-Allow-Methods": "POST, OPTIONS",
+#         "Access-Control-Allow-Headers": "*"
+#     })
 
 # Prediction route
 @app.post("/predict/")
